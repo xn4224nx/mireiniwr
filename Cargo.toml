@@ -1,0 +1,17 @@
+cargo-features = ["strip"]
+[package]
+name = "mireiniwr"
+version = "0.1.0"
+edition = "2024"
+author = "xn4224nx"
+
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z"  # Optimize for size. Another option to try is "s"
+lto = true # Enable Link Time Optimization
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
+panic = "abort" # Abort on Panic
+
+
+[dependencies]
