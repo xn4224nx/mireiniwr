@@ -2,6 +2,7 @@
  * Functions associated with file signitures or magic numbers.
  */
 
+#[derive(PartialEq, Debug)]
 enum FileSigniture {
     Unknown,
     MultiBitBitcoinWallet,
@@ -10,10 +11,16 @@ enum FileSigniture {
     TelegramDesktopFile,
     TelegramDesktopEncryptedFile,
     JKSJavaKeyStore,
+    PEMCertificate,
+    PEMCertificateRequest,
+    PEMPrivateKey,
+    PEMDSAPrivateKey,
+    PEMRSAPrivateKey,
     PuTTYPrivateKeyV2,
     PuTTYPrivateKeyV3,
     OpenSSHPrivateKey,
     WindowsRegistry,
+    KDBX,
 }
 
 impl FileSigniture {
@@ -27,32 +34,168 @@ mod tests {
     use super::*;
 
     #[test]
-    fn detect_multibit_bitcoin_wallet() {}
+    fn detect_multibit_bitcoin_wallet() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x0A, 0x16, 0x6F, 0x72, 0x67, 0x2E, 0x62, 0x69, 0x74, 0x63, 0x6F, 0x69, 0x6E, 0x2E,
+                0x70, 0x72
+            ]),
+            FileSigniture::MultiBitBitcoinWallet
+        );
+    }
 
     #[test]
-    fn detect_armored_pgp_public_key() {}
+    fn detect_armored_pgp_public_key() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x42, 0x45, 0x47, 0x49, 0x4e, 0x20, 0x50, 0x47, 0x50,
+                0x20, 0x50, 0x55, 0x42, 0x4c, 0x49, 0x43, 0x20, 0x4b, 0x45, 0x49, 0x20, 0x42, 0x4c,
+                0x4f, 0x43, 0x4b, 0x2d, 0x2d, 0x2d, 0x2d, 0x2d,
+            ]),
+            FileSigniture::ArmoredPGPPublicKey
+        );
+    }
 
     #[test]
-    fn detect_sqlite_database() {}
+    fn detect_sqlite_database() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x53, 0x51, 0x4C, 0x69, 0x74, 0x65, 0x20, 0x66, 0x6F, 0x72, 0x6D, 0x61, 0x74, 0x20,
+                0x33, 0x00,
+            ]),
+            FileSigniture::SQLiteDatabase
+        );
+    }
 
     #[test]
-    fn detect_telegram_desktop_file() {}
+    fn detect_telegram_desktop_file() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![0x54, 0x44, 0x46, 0x24]),
+            FileSigniture::TelegramDesktopFile
+        );
+    }
 
     #[test]
-    fn detect_telegram_desktop_encrypted_file() {}
+    fn detect_telegram_desktop_encrypted_file() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![0x54, 0x44, 0x45, 0x46]),
+            FileSigniture::TelegramDesktopEncryptedFile
+        );
+    }
 
     #[test]
-    fn detect_jks_java_key_store() {}
+    fn detect_jks_java_key_store() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![0xFE, 0xED, 0xFE, 0xED]),
+            FileSigniture::JKSJavaKeyStore
+        );
+    }
 
     #[test]
-    fn detect_putty_private_key_v2() {}
+    fn detect_pem_certificate() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x42, 0x45, 0x47, 0x49, 0x4E, 0x20, 0x43, 0x45, 0x52,
+                0x54, 0x49, 0x46, 0x49, 0x43, 0x41, 0x54, 0x45, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D
+            ]),
+            FileSigniture::PEMCertificate
+        );
+    }
 
     #[test]
-    fn detect_putty_private_key_v3() {}
+    fn detect_pem_certificate_request() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x42, 0x45, 0x47, 0x49, 0x4E, 0x20, 0x43, 0x45, 0x52,
+                0x54, 0x49, 0x46, 0x49, 0x43, 0x41, 0x54, 0x45, 0x20, 0x52, 0x45, 0x51, 0x55, 0x45,
+                0x53, 0x54, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D
+            ]),
+            FileSigniture::PEMCertificateRequest
+        );
+    }
 
     #[test]
-    fn detect_open_ssh_private_key() {}
+    fn detect_pem_private_key() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x42, 0x45, 0x47, 0x49, 0x4E, 0x20, 0x50, 0x52, 0x49,
+                0x56, 0x41, 0x54, 0x45, 0x20, 0x4B, 0x45, 0x59, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D
+            ]),
+            FileSigniture::PEMPrivateKey
+        );
+    }
 
     #[test]
-    fn detect_windows_registry() {}
+    fn detect_pem_dsa_private_key() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x42, 0x45, 0x47, 0x49, 0x4E, 0x20, 0x44, 0x53, 0x41,
+                0x20, 0x50, 0x52, 0x49, 0x56, 0x41, 0x54, 0x45, 0x20, 0x4B, 0x45, 0x59, 0x2D, 0x2D,
+                0x2D, 0x2D, 0x2D
+            ]),
+            FileSigniture::PEMDSAPrivateKey
+        );
+    }
+
+    #[test]
+    fn detect_pem_rsa_private_key() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x42, 0x45, 0x47, 0x49, 0x4E, 0x20, 0x52, 0x53, 0x41,
+                0x20, 0x50, 0x52, 0x49, 0x56, 0x41, 0x54, 0x45, 0x20, 0x4B, 0x45, 0x59, 0x2D, 0x2D,
+                0x2D, 0x2D, 0x2D
+            ]),
+            FileSigniture::PEMRSAPrivateKey
+        );
+    }
+
+    #[test]
+    fn detect_putty_private_key_v2() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x50, 0x75, 0x54, 0x54, 0x59, 0x2D, 0x55, 0x73, 0x65, 0x72, 0x2D, 0x4B, 0x65, 0x79,
+                0x2D, 0x46, 0x69, 0x6C, 0x65, 0x2D, 0x32, 0x3A,
+            ]),
+            FileSigniture::PuTTYPrivateKeyV2
+        );
+    }
+
+    #[test]
+    fn detect_putty_private_key_v3() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x50, 0x75, 0x54, 0x54, 0x59, 0x2D, 0x55, 0x73, 0x65, 0x72, 0x2D, 0x4B, 0x65, 0x79,
+                0x2D, 0x46, 0x69, 0x6C, 0x65, 0x2D, 0x33, 0x3A,
+            ]),
+            FileSigniture::PuTTYPrivateKeyV3
+        );
+    }
+
+    #[test]
+    fn detect_open_ssh_private_key() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![
+                0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x42, 0x45, 0x47, 0x49, 0x4E, 0x20, 0x4F, 0x50, 0x45,
+                0x4E, 0x53, 0x53, 0x48, 0x20, 0x50, 0x52, 0x49, 0x56, 0x41, 0x54, 0x45, 0x20, 0x4B,
+                0x45, 0x59, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D,
+            ]),
+            FileSigniture::OpenSSHPrivateKey
+        );
+    }
+
+    #[test]
+    fn detect_windows_registry() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![0x72, 0x65, 0x67, 0x66]),
+            FileSigniture::WindowsRegistry
+        );
+    }
+
+    #[test]
+    fn detect_kdbx() {
+        assert_eq!(
+            FileSigniture::from_bytes(&vec![0x03, 0xD9, 0xA2, 0x9A, 0x67, 0xFB, 0x4B, 0xB5]),
+            FileSigniture::KDBX
+        );
+    }
 }
