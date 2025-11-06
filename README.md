@@ -8,3 +8,5 @@ A cyber security tool to identify sensitive files on a Windows NT system. The to
 3) Known locations of sensitive files for [common applications](https://easytechsolver.com/where-is-the-password-stored-in-chrome/).
 
 4) Searching text files for very [high entropy strings](https://kee1ongz.github.io/paper/sp25-secret.pdf).
+
+5) Searching for secrets in text files based on the presence of [certain strings or characters](https://aoa0.github.io/pubs/icse22.pdf). 
