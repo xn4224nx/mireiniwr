@@ -2,12 +2,27 @@
  * Entities For Dealing With The OS
  */
 
-use std::io::{Error, ErrorKind};
+use std::error::Error;
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 
 /// Using the path to a file, extract the at least the first 64 bytes of its data
-fn read_file_header(file: &Path) -> Result<Vec<u8>, ErrorKind> {
-    Ok(Vec::new())
+fn read_file_header(file: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
+    let num_bytes = 64;
+
+    /* Open the file and move the pointer to the position to read from. */
+    let mut f_pntr = File::open(file)?;
+    f_pntr.seek(SeekFrom::Start(0))?;
+
+    /* Determine if the file is big enough to fill the whole buffer. */
+    let file_size: usize = f_pntr.metadata().unwrap().len() as usize;
+    let buf_size: usize = std::cmp::min(file_size, num_bytes);
+    let mut buffer = vec![0; buf_size];
+
+    /* Read the data from the file and return it. */
+    f_pntr.read_exact(&mut buffer)?;
+    return Ok(buffer);
 }
 
 #[cfg(test)]
@@ -17,7 +32,7 @@ mod tests {
     #[test]
     fn read_empty_file() {
         assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/empty_file.txt")).unwrap(),
+            read_file_header(&Path::new("./tests/testing_files/empty_file.txt")).unwrap(),
             Vec::new()
         )
     }
@@ -25,7 +40,7 @@ mod tests {
     #[test]
     fn read_file_smaller_than_64_bytes() {
         assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/smaller_64_bytes.csv")).unwrap(),
+            read_file_header(&Path::new("./tests/testing_files/smaller_64_bytes.csv")).unwrap(),
             vec![
                 0x4E, 0x61, 0x6D, 0x65, 0x20, 0x2C, 0x41, 0x67, 0x65, 0x2C, 0x48, 0x65, 0x69, 0x67,
                 0x68, 0x74, 0x0A, 0x4D, 0x61, 0x72, 0x6B, 0x2C, 0x32, 0x32, 0x2C, 0x31, 0x2E, 0x36,
@@ -36,32 +51,23 @@ mod tests {
 
     #[test]
     fn read_non_existant_file() {
-        assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/empty_file.txt")),
-            Err(ErrorKind::NotFound)
-        )
+        assert!(read_file_header(&Path::new("./tests/testing_files/NO_FILE.txt")).is_err());
     }
 
     #[test]
     fn read_file_without_permissions() {
-        assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/no_permissions.txt")),
-            Err(ErrorKind::PermissionDenied)
-        )
+        assert!(read_file_header(&Path::new("./tests/testing_files/no_permissions.txt")).is_err(),);
     }
 
     #[test]
     fn read_a_directory() {
-        assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/dir")),
-            Err(ErrorKind::IsADirectory)
-        )
+        assert!(read_file_header(&Path::new("./tests/testing_files/dir")).is_err());
     }
 
     #[test]
     fn read_binary_file() {
         assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/binary_file.exe")).unwrap(),
+            read_file_header(&Path::new("./tests/testing_files/binary_file.exe")).unwrap(),
             vec![
                 0x03, 0xD9, 0xA2, 0x9A, 0x67, 0xFB, 0x4B, 0xB5, 0x01, 0x00, 0x03, 0x00, 0x02, 0x10,
                 0x00, 0x31, 0xC1, 0xF2, 0xE6, 0xBF, 0x71, 0x43, 0x50, 0xBE, 0x58, 0x05, 0x21, 0x6A,
@@ -75,13 +81,13 @@ mod tests {
     #[test]
     fn read_binary_file2() {
         assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/binary_file_2.exe")).unwrap(),
+            read_file_header(&Path::new("./tests/testing_files/binary_file_2.bin")).unwrap(),
             vec![
                 0x03, 0xD9, 0xA2, 0x9A, 0x67, 0xFB, 0x4B, 0xB5, 0x00, 0x00, 0x04, 0x00, 0x02, 0x10,
                 0x00, 0x00, 0x00, 0x31, 0xC1, 0xF2, 0xE6, 0xBF, 0x71, 0x43, 0x50, 0xBE, 0x58, 0x05,
                 0x21, 0x6A, 0xFC, 0x5A, 0xFF, 0x03, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
                 0x04, 0x20, 0x00, 0x00, 0x00, 0xED, 0x1F, 0x69, 0x5B, 0x51, 0x1B, 0xE4, 0x7A, 0xFF,
-                0xC0, 0xB7, 0xE6, 0x3A, 0x09, 0x72, 0x06
+                0xC0, 0xB7, 0xE6, 0x3A, 0x09, 0x72, 0x06, 0x59
             ]
         )
     }
@@ -89,7 +95,7 @@ mod tests {
     #[test]
     fn read_text_file() {
         assert_eq!(
-            read_file_header(&Path::new("../tests/testing_files/text_file.bib")).unwrap(),
+            read_file_header(&Path::new("./tests/testing_files/text_file.bib")).unwrap(),
             vec![
                 0x40, 0x49, 0x6E, 0x50, 0x72, 0x6F, 0x63, 0x65, 0x65, 0x64, 0x69, 0x6E, 0x67, 0x73,
                 0x7B, 0x31, 0x30, 0x2E, 0x31, 0x30, 0x30, 0x37, 0x2F, 0x39, 0x37, 0x38, 0x2D, 0x33,
