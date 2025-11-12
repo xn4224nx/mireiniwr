@@ -1,4 +1,7 @@
 # Mireiniwr
+
+## Overview
+
 A cyber security tool to identify sensitive files on a Windows NT system. The tool aims to use four main methods to find files:
 
 1) Wide searches based on [filename extensions](https://gist.github.com/lgg/e6ccc6e212d18dd2ecd8a8c116fb1e45).
@@ -10,3 +13,9 @@ A cyber security tool to identify sensitive files on a Windows NT system. The to
 4) Searching text files for very [high entropy strings](https://kee1ongz.github.io/paper/sp25-secret.pdf).
 
 5) Searching for secrets in text files based on the presence of [certain strings or characters](https://aoa0.github.io/pubs/icse22.pdf). 
+
+
+
+## Project TODOs
+
+1) Account for different error types in tests.
