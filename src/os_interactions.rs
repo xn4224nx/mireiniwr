@@ -13,7 +13,6 @@ fn read_file_header(file: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
 
     /* Open the file and move the pointer to the position to read from. */
     let mut f_pntr = File::open(file)?;
-    f_pntr.seek(SeekFrom::Start(0))?;
 
     /* Determine if the file is big enough to fill the whole buffer. */
     let file_size: usize = f_pntr.metadata().unwrap().len() as usize;
