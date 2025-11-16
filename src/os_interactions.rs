@@ -2,19 +2,17 @@
  * Entities For Dealing With The OS
  */
 
-use std::collections::HashSet;
 use std::error::Error;
-use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
-use std::iter::FromIterator;
+use std::io::Read;
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 /// Using the path to a file, extract the at least the first 64 bytes of its data
 fn read_file_header(file: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
     let num_bytes = 64;
 
     /* Open the file and move the pointer to the position to read from. */
-    let mut f_pntr = File::open(file)?;
+    let mut f_pntr = std::fs::File::open(file)?;
 
     /* Determine if the file is big enough to fill the whole buffer. */
     let file_size: usize = f_pntr.metadata().unwrap().len() as usize;
@@ -33,7 +31,34 @@ fn extention_search(
     directory: &Path,
     extentions: &Vec<String>,
 ) -> Result<Vec<PathBuf>, std::io::Error> {
-    Ok(Vec::new())
+    let mut found_paths = Vec::new();
+
+    /* Ensure the supplied path is valid and accessible. */
+    match std::fs::metadata(directory) {
+        Ok(metadata) => {
+            if !metadata.is_dir() {
+                return Err(std::io::ErrorKind::NotADirectory.into());
+            }
+        }
+        Err(error) => {
+            return Err(error);
+        }
+    }
+
+    /* Iterate over the directory contents saving paths that match the extentions. */
+    for entry in WalkDir::new(directory).into_iter().filter_map(|x| x.ok()) {
+        if entry.path().is_file() {
+            for exten in extentions.iter() {
+                if (entry.path().extension().is_some()
+                    && *entry.path().extension().unwrap() == **exten)
+                    || (entry.path().extension().is_none() && *exten == String::from(""))
+                {
+                    found_paths.push(entry.path().to_path_buf());
+                }
+            }
+        }
+    }
+    return Ok(found_paths);
 }
 
 /// Return the paths of all text files recursive within a specific directory
@@ -45,6 +70,7 @@ fn txt_file_search(directory: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn read_empty_file() {
@@ -381,6 +407,34 @@ mod tests {
             .len(),
             35
         );
+    }
+
+    #[test]
+    #[should_panic]
+    fn extention_seach_path_is_file() {
+        extention_search(
+            &Path::new("./tests/testing_files/file_searches/0/0.txt"),
+            &vec![
+                String::from("txt"),
+                String::from("bin"),
+                String::from("doc"),
+            ],
+        )
+        .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn extention_seach_path_does_not_exist() {
+        extention_search(
+            &Path::new("./tests/testing_files/file_searches/FOLDER"),
+            &vec![
+                String::from("txt"),
+                String::from("bin"),
+                String::from("doc"),
+            ],
+        )
+        .unwrap();
     }
 
     #[test]

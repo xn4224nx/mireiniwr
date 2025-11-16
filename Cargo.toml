@@ -15,3 +15,5 @@ panic = "abort" # Abort on Panic
 
 
 [dependencies]
+walkdir = "2.5.0"
+
