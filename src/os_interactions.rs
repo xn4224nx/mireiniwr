@@ -2,10 +2,12 @@
  * Entities For Dealing With The OS
  */
 
+use std::collections::HashSet;
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
-use std::path::Path;
+use std::iter::FromIterator;
+use std::path::{Path, PathBuf};
 
 /// Using the path to a file, extract the at least the first 64 bytes of its data
 fn read_file_header(file: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
@@ -22,6 +24,22 @@ fn read_file_header(file: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
     /* Read the data from the file and return it. */
     f_pntr.read_exact(&mut buffer)?;
     return Ok(buffer);
+}
+
+/// Find files with a specific extention recursively in a specific directory
+/// and return their relative paths. An empty extention vector will find
+/// all files.
+fn extention_search(
+    directory: &Path,
+    extentions: &Vec<String>,
+) -> Result<Vec<PathBuf>, std::io::Error> {
+    Ok(Vec::new())
+}
+
+/// Return the paths of all text files recursive within a specific directory
+/// and return their relative paths.
+fn txt_file_search(directory: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
+    Ok(Vec::new())
 }
 
 #[cfg(test)]
@@ -130,5 +148,455 @@ mod tests {
                 0x65, 0x6E, 0x2C, 0x20, 0x54, 0x68, 0x61, 0x6E
             ]
         )
+    }
+
+    #[test]
+    fn search_for_txt_extentions_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                extention_search(
+                    &Path::new("./tests/testing_files/file_searches/"),
+                    &vec![String::from("txt")]
+                )
+                .unwrap()
+                .iter()
+                .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/0/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/4.txt"),
+            ])
+        );
+    }
+
+    #[test]
+    fn search_for_txt_extentions_cnt() {
+        assert_eq!(
+            extention_search(
+                &Path::new("./tests/testing_files/file_searches/"),
+                &vec![String::from("txt")]
+            )
+            .unwrap()
+            .len(),
+            25
+        );
+    }
+
+    #[test]
+    fn search_for_doc_extentions_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                extention_search(
+                    &Path::new("./tests/testing_files/file_searches/"),
+                    &vec![String::from("doc")]
+                )
+                .unwrap()
+                .iter()
+                .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/6/0.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/1.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/2.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/3.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/4.doc"),
+            ])
+        );
+    }
+
+    #[test]
+    fn search_for_doc_extentions_cnt() {
+        assert_eq!(
+            extention_search(
+                &Path::new("./tests/testing_files/file_searches/"),
+                &vec![String::from("doc")]
+            )
+            .unwrap()
+            .len(),
+            5
+        );
+    }
+
+    #[test]
+    fn search_for_bin_extentions_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                extention_search(
+                    &Path::new("./tests/testing_files/file_searches/"),
+                    &vec![String::from("bin")]
+                )
+                .unwrap()
+                .iter()
+                .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/5/0.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/1.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/2.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/3.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/4.bin"),
+            ])
+        );
+    }
+
+    #[test]
+    fn search_for_bin_extentions_cnt() {
+        assert_eq!(
+            extention_search(
+                &Path::new("./tests/testing_files/file_searches/"),
+                &vec![String::from("bin")]
+            )
+            .unwrap()
+            .len(),
+            5
+        );
+    }
+
+    #[test]
+    fn search_for_no_extentions_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                extention_search(
+                    &Path::new("./tests/testing_files/file_searches/"),
+                    &vec![String::from("")]
+                )
+                .unwrap()
+                .iter()
+                .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/7/0"),
+                PathBuf::from("./tests/testing_files/file_searches/7/1"),
+                PathBuf::from("./tests/testing_files/file_searches/7/2"),
+                PathBuf::from("./tests/testing_files/file_searches/7/3"),
+                PathBuf::from("./tests/testing_files/file_searches/7/4"),
+            ])
+        );
+    }
+
+    #[test]
+    fn search_for_no_extentions_cnt() {
+        assert_eq!(
+            extention_search(
+                &Path::new("./tests/testing_files/file_searches/"),
+                &vec![String::from("")]
+            )
+            .unwrap()
+            .len(),
+            5
+        );
+    }
+
+    #[test]
+    fn search_for_all_extentions_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                extention_search(
+                    &Path::new("./tests/testing_files/file_searches/"),
+                    &vec![
+                        String::from("txt"),
+                        String::from("bin"),
+                        String::from("doc")
+                    ]
+                )
+                .unwrap()
+                .iter()
+                .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/0/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/4.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/6/0.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/1.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/2.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/3.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/4.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/5/0.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/1.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/2.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/3.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/4.bin"),
+            ])
+        );
+    }
+
+    #[test]
+    fn search_for_all_extentions_cnt() {
+        assert_eq!(
+            extention_search(
+                &Path::new("./tests/testing_files/file_searches/"),
+                &vec![
+                    String::from("txt"),
+                    String::from("bin"),
+                    String::from("doc")
+                ]
+            )
+            .unwrap()
+            .len(),
+            35
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_0_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/0"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_1_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/1"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_2_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/2"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_3_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/3"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_4_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/4"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_5_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/5"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_6_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/6"))
+                .unwrap()
+                .len(),
+            3
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_7_cnt() {
+        assert_eq!(
+            txt_file_search(&Path::new("./tests/testing_files/file_searches/7"))
+                .unwrap()
+                .len(),
+            4
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_0_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/0"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/0/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/0/4.txt")
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_1_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/1"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/1/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/1/4.txt")
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_2_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/2"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/2/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/2/4.txt")
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_3_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/3"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/3/1.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/2.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/3/3.txt"),
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_4_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/4"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/4/0.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/3.txt"),
+                PathBuf::from("./tests/testing_files/file_searches/4/4.txt")
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_5_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/5"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/5/0.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/1.bin"),
+                PathBuf::from("./tests/testing_files/file_searches/5/4.bin")
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_6_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/6"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/6/0.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/1.doc"),
+                PathBuf::from("./tests/testing_files/file_searches/6/3.doc"),
+            ])
+        );
+    }
+
+    #[test]
+    fn txt_file_search_dir_7_val() {
+        assert_eq!(
+            HashSet::from_iter(
+                txt_file_search(&Path::new("./tests/testing_files/file_searches/7"))
+                    .unwrap()
+                    .iter()
+                    .cloned()
+            ),
+            HashSet::from([
+                PathBuf::from("./tests/testing_files/file_searches/7/0"),
+                PathBuf::from("./tests/testing_files/file_searches/7/1"),
+                PathBuf::from("./tests/testing_files/file_searches/7/3"),
+                PathBuf::from("./tests/testing_files/file_searches/7/4")
+            ])
+        );
     }
 }
