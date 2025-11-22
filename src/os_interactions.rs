@@ -115,30 +115,26 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn read_non_existant_file() {
-        assert!(
-            read_file_header(&Path::new(
-                "./tests/testing_files/read_file_header/NO_FILE.txt"
-            ))
-            .is_err()
-        );
+        read_file_header(&Path::new(
+            "./tests/testing_files/read_file_header/NO_FILE.txt",
+        ))
+        .unwrap();
     }
-
     #[test]
+    #[should_panic]
     fn read_file_without_permissions() {
-        assert!(
-            read_file_header(&Path::new(
-                "./tests/testing_files/read_file_header/no_permissions.txt"
-            ))
-            .is_err(),
-        );
+        read_file_header(&Path::new(
+            "./tests/testing_files/read_file_header/no_permissions.txt",
+        ))
+        .unwrap();
     }
 
     #[test]
+    #[should_panic]
     fn read_a_directory() {
-        assert!(
-            read_file_header(&Path::new("./tests/testing_files/read_file_header/dir")).is_err()
-        );
+        read_file_header(&Path::new("./tests/testing_files/read_file_header/dir")).unwrap();
     }
 
     #[test]
