@@ -466,6 +466,22 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    #[cfg(target_os = "linux")]
+    fn linux_forbidden_directory_access() {
+        file_search(
+            &Path::new("/boot/efi/EFI/"),
+            &vec![
+                String::from("txt"),
+                String::from("bin"),
+                String::from("doc"),
+            ],
+            false,
+        )
+        .unwrap();
+    }
+
+    #[test]
     fn txt_file_search_dir_0_cnt() {
         assert_eq!(
             file_search(
