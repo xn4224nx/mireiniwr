@@ -24,12 +24,12 @@ fn read_file_header(file: &Path) -> Result<Vec<u8>, Box<dyn Error>> {
     return Ok(buffer);
 }
 
-/// Find files with a specific extention recursively in a specific directory
-/// and return their relative paths. An empty extention vector will find
-/// all files.
-fn extention_search(
+/// Return all the relative paths of files with specific extentions or that are
+/// text files recursively in a specific directory.
+fn file_search(
     directory: &Path,
     extentions: &Vec<String>,
+    txt_files: bool,
 ) -> Result<Vec<PathBuf>, std::io::Error> {
     let mut found_paths = Vec::new();
 
@@ -46,25 +46,41 @@ fn extention_search(
     }
 
     /* Iterate over the directory contents saving paths that match the extentions. */
-    for entry in WalkDir::new(directory).into_iter().filter_map(|x| x.ok()) {
-        if entry.path().is_file() {
+    'path_walk: for dir_enity in WalkDir::new(directory).into_iter().filter_map(|x| x.ok()) {
+        let entry = dir_enity.path();
+
+        if entry.is_file() {
             for exten in extentions.iter() {
-                if (entry.path().extension().is_some()
-                    && *entry.path().extension().unwrap() == **exten)
-                    || (entry.path().extension().is_none() && *exten == String::from(""))
+                if (entry.extension().is_some() && *entry.extension().unwrap() == **exten)
+                    || (entry.extension().is_none() && *exten == String::from(""))
                 {
-                    found_paths.push(entry.path().to_path_buf());
+                    found_paths.push(entry.to_path_buf());
+                    continue 'path_walk;
                 }
+            }
+
+            /* The file is not text if it has non-printible chars. */
+            if txt_files {
+                let Ok(file_head) = read_file_header(entry) else {
+                    continue 'path_walk;
+                };
+
+                /* Ignore empty files. */
+                if file_head.len() == 0 {
+                    continue 'path_walk;
+                };
+
+                /* Check for non-printable chars. */
+                for char_val in file_head.into_iter() {
+                    if char_val < 32 || char_val == 127 {
+                        continue 'path_walk;
+                    }
+                }
+                found_paths.push(entry.to_path_buf());
             }
         }
     }
     return Ok(found_paths);
-}
-
-/// Return the paths of all text files recursive within a specific directory
-/// and return their relative paths.
-fn txt_file_search(directory: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
-    Ok(Vec::new())
 }
 
 #[cfg(test)]
@@ -180,9 +196,10 @@ mod tests {
     fn search_for_txt_extentions_val() {
         assert_eq!(
             HashSet::from_iter(
-                extention_search(
+                file_search(
                     &Path::new("./tests/testing_files/file_searches/"),
-                    &vec![String::from("txt")]
+                    &vec![String::from("txt")],
+                    false
                 )
                 .unwrap()
                 .iter()
@@ -221,9 +238,10 @@ mod tests {
     #[test]
     fn search_for_txt_extentions_cnt() {
         assert_eq!(
-            extention_search(
+            file_search(
                 &Path::new("./tests/testing_files/file_searches/"),
-                &vec![String::from("txt")]
+                &vec![String::from("txt")],
+                false
             )
             .unwrap()
             .len(),
@@ -235,9 +253,10 @@ mod tests {
     fn search_for_doc_extentions_val() {
         assert_eq!(
             HashSet::from_iter(
-                extention_search(
+                file_search(
                     &Path::new("./tests/testing_files/file_searches/"),
-                    &vec![String::from("doc")]
+                    &vec![String::from("doc")],
+                    false
                 )
                 .unwrap()
                 .iter()
@@ -256,9 +275,10 @@ mod tests {
     #[test]
     fn search_for_doc_extentions_cnt() {
         assert_eq!(
-            extention_search(
+            file_search(
                 &Path::new("./tests/testing_files/file_searches/"),
-                &vec![String::from("doc")]
+                &vec![String::from("doc")],
+                false
             )
             .unwrap()
             .len(),
@@ -270,9 +290,10 @@ mod tests {
     fn search_for_bin_extentions_val() {
         assert_eq!(
             HashSet::from_iter(
-                extention_search(
+                file_search(
                     &Path::new("./tests/testing_files/file_searches/"),
-                    &vec![String::from("bin")]
+                    &vec![String::from("bin")],
+                    false
                 )
                 .unwrap()
                 .iter()
@@ -291,9 +312,10 @@ mod tests {
     #[test]
     fn search_for_bin_extentions_cnt() {
         assert_eq!(
-            extention_search(
+            file_search(
                 &Path::new("./tests/testing_files/file_searches/"),
-                &vec![String::from("bin")]
+                &vec![String::from("bin")],
+                false
             )
             .unwrap()
             .len(),
@@ -305,9 +327,10 @@ mod tests {
     fn search_for_no_extentions_val() {
         assert_eq!(
             HashSet::from_iter(
-                extention_search(
+                file_search(
                     &Path::new("./tests/testing_files/file_searches/"),
-                    &vec![String::from("")]
+                    &vec![String::from("")],
+                    false
                 )
                 .unwrap()
                 .iter()
@@ -326,9 +349,10 @@ mod tests {
     #[test]
     fn search_for_no_extentions_cnt() {
         assert_eq!(
-            extention_search(
+            file_search(
                 &Path::new("./tests/testing_files/file_searches/"),
-                &vec![String::from("")]
+                &vec![String::from("")],
+                false
             )
             .unwrap()
             .len(),
@@ -340,13 +364,14 @@ mod tests {
     fn search_for_all_extentions_val() {
         assert_eq!(
             HashSet::from_iter(
-                extention_search(
+                file_search(
                     &Path::new("./tests/testing_files/file_searches/"),
                     &vec![
                         String::from("txt"),
                         String::from("bin"),
                         String::from("doc")
-                    ]
+                    ],
+                    false
                 )
                 .unwrap()
                 .iter()
@@ -395,13 +420,14 @@ mod tests {
     #[test]
     fn search_for_all_extentions_cnt() {
         assert_eq!(
-            extention_search(
+            file_search(
                 &Path::new("./tests/testing_files/file_searches/"),
                 &vec![
                     String::from("txt"),
                     String::from("bin"),
                     String::from("doc")
-                ]
+                ],
+                false
             )
             .unwrap()
             .len(),
@@ -412,13 +438,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn extention_seach_path_is_file() {
-        extention_search(
+        file_search(
             &Path::new("./tests/testing_files/file_searches/0/0.txt"),
             &vec![
                 String::from("txt"),
                 String::from("bin"),
                 String::from("doc"),
             ],
+            false,
         )
         .unwrap();
     }
@@ -426,13 +453,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn extention_seach_path_does_not_exist() {
-        extention_search(
+        file_search(
             &Path::new("./tests/testing_files/file_searches/FOLDER"),
             &vec![
                 String::from("txt"),
                 String::from("bin"),
                 String::from("doc"),
             ],
+            false,
         )
         .unwrap();
     }
@@ -440,9 +468,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_0_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/0"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/0"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -450,9 +482,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_1_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/1"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/1"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -460,9 +496,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_2_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/2"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/2"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -470,9 +510,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_3_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/3"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/3"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -480,9 +524,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_4_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/4"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/4"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -490,9 +538,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_5_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/5"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/5"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -500,9 +552,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_6_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/6"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/6"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             3
         );
     }
@@ -510,9 +566,13 @@ mod tests {
     #[test]
     fn txt_file_search_dir_7_cnt() {
         assert_eq!(
-            txt_file_search(&Path::new("./tests/testing_files/file_searches/7"))
-                .unwrap()
-                .len(),
+            file_search(
+                &Path::new("./tests/testing_files/file_searches/7"),
+                &Vec::new(),
+                true
+            )
+            .unwrap()
+            .len(),
             4
         );
     }
@@ -521,10 +581,14 @@ mod tests {
     fn txt_file_search_dir_0_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/0"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/0"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/0/0.txt"),
@@ -538,10 +602,14 @@ mod tests {
     fn txt_file_search_dir_1_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/1"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/1"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/1/2.txt"),
@@ -555,10 +623,14 @@ mod tests {
     fn txt_file_search_dir_2_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/2"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/2"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/2/2.txt"),
@@ -572,10 +644,14 @@ mod tests {
     fn txt_file_search_dir_3_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/3"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/3"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/3/1.txt"),
@@ -589,10 +665,14 @@ mod tests {
     fn txt_file_search_dir_4_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/4"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/4"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/4/0.txt"),
@@ -606,10 +686,14 @@ mod tests {
     fn txt_file_search_dir_5_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/5"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/5"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/5/0.bin"),
@@ -623,10 +707,14 @@ mod tests {
     fn txt_file_search_dir_6_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/6"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/6"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/6/0.doc"),
@@ -640,10 +728,14 @@ mod tests {
     fn txt_file_search_dir_7_val() {
         assert_eq!(
             HashSet::from_iter(
-                txt_file_search(&Path::new("./tests/testing_files/file_searches/7"))
-                    .unwrap()
-                    .iter()
-                    .cloned()
+                file_search(
+                    &Path::new("./tests/testing_files/file_searches/7"),
+                    &Vec::new(),
+                    true
+                )
+                .unwrap()
+                .iter()
+                .cloned()
             ),
             HashSet::from([
                 PathBuf::from("./tests/testing_files/file_searches/7/0"),
