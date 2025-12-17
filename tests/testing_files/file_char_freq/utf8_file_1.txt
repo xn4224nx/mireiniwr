@@ -1,0 +1,50 @@
+Andy Blankenbiller <rablanke@crdec7.apgea.army.mil>
+Andy Blankenbiller, Army at Aberdeen
+
+bajan@cs.mcgill.ca
+Alan Emtage, McGill University Computer Science Department
+
+Brian Fitzgerald <fitz@mml0.meche.rpi.edu>
+Brian Fitzgerald, Rensselaer Polytechnic Institute
+
+John Goetsch <ccjg@hippo.ru.ac.za>
+John Goetsch, Rhodes University, South Africa
+
+composer@chem.bu.edu
+Jeff Kellem, Boston University's Chemistry Department
+
+kraussW@moravian.edu
+Bill Krauss, Moravian College
+
+Steve Lodin <deaes!swlodin@iuvax.cs.indiana.edu>
+Steve Lodin, Delco Electronics
+
+Mike Nesel <nesel@elxsi.dfrf.nasa.gov>
+Mike Nesel, NASA
+
+Bob <neveln@cs.widener.edu>
+Bob Neveln, Widener University Computer Science Department
+
+wamapi@dunkin.cc.mcgill.ca (Wanda Pierce)
+Wanda Pierce, McGill University Computing Centre
+
+Joshua.R.Poulson@cyber.widener.edu
+Joshua Poulson, Widener University Computing Services
+
+de5@ornl.gov
+Dave Sill, Oak Ridge National Laboratory
+
+bsmart@bsmart.tti.com
+Bob Smart, CitiCorp/TTI
+
+emv@msen.com
+Ed Vielmetti, Vice President of MSEN
+
+Craig E. Ward <cew@venera.isi.edu>
+Craig Ward, USC/Information Sciences Institute (ISI)
+
+Glee Willis <willis@unssun.nevada.edu>
+Glee Willis, University of Nevada, Reno
+
+Charles Yamasaki <chip@oshcomm.osha.gov>
+Chip Yamasaki, OSHA
