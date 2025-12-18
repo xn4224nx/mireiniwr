@@ -3,7 +3,8 @@
  */
 
 use std::error::Error;
-use std::io::Read;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -83,9 +84,32 @@ fn file_search(
     return Ok(found_paths);
 }
 
-/// Determine the count of the ascii characters within a file and
+/// Determine the count of the ascii characters within a text file and
 /// return a vector with the counts of each character.
-fn file_char_cnt(file: &Path) -> Result<Vec<usize>, Box<dyn Error>> {
+fn file_char_cnt(text_file: &Path) -> Result<Vec<usize>, Box<dyn Error>> {
+    let mut buffer = String::new();
+    let mut seen_chars = vec![0; 128];
+    // stream did not contain valid UTF-8
+    /* Open the text file. */
+    let file = File::open(text_file)?;
+    let mut fp = BufReader::new(file);
+
+    /* Read the text file line by line. */
+    while fp.read_line(&mut buffer)? > 0 {
+        for f_char in buffer.chars() {
+            let index: usize = f_char as u8 as usize;
+
+            if index < seen_chars.len() {
+                seen_chars[index] += 1;
+            }
+        }
+        buffer.clear();
+    }
+    return Ok(seen_chars);
+}
+
+/// Extract all the whitespace seperated strings from a text file.
+fn file_str_extract(text_file: &Path) -> Result<Vec<String>, Box<dyn Error>> {
     return Ok(Vec::new());
 }
 
@@ -130,11 +154,9 @@ mod tests {
     }
     #[test]
     #[should_panic]
-    fn read_file_without_permissions() {
-        read_file_header(&Path::new(
-            "./tests/testing_files/read_file_header/no_permissions.txt",
-        ))
-        .unwrap();
+    #[cfg(target_os = "linux")]
+    fn read_file_without_permissions_linux() {
+        read_file_header(&Path::new("/etc/shadow")).unwrap();
     }
 
     #[test]
@@ -769,34 +791,35 @@ mod tests {
     fn char_cnt_file_not_exist() {
         let _ = file_char_cnt(&Path::new(
             "./tests/testing_files/file_char_freq/DOES_NOT_EXIST",
-        ));
+        ))
+        .unwrap();
     }
 
     #[test]
     #[should_panic]
     #[cfg(target_os = "linux")]
     fn char_cnt_file_not_readable_linux() {
-        let _ = file_char_cnt(&Path::new("/etc/shadow"));
+        let _ = file_char_cnt(&Path::new("/etc/shadow")).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn char_cnt_open_folder() {
-        let _ = file_char_cnt(&Path::new("./tests/testing_files/file_char_freq"));
+        let _ = file_char_cnt(&Path::new("./tests/testing_files/file_char_freq")).unwrap();
     }
 
     #[test]
     #[should_panic]
     #[cfg(target_os = "linux")]
     fn char_cnt_file_not_reachable_linux() {
-        let _ = file_char_cnt(&Path::new("/boot/efi/EFI/BOOT/BOOTX64.EFI"));
+        let _ = file_char_cnt(&Path::new("/boot/efi/EFI/BOOT/BOOTX64.EFI")).unwrap();
     }
 
     #[test]
     #[should_panic]
     #[cfg(target_os = "windows")]
     fn char_cnt_file_not_reachable_linux() {
-        let _ = file_char_cnt(&Path::new(r"C:\Windows\System32\Config\SAM"));
+        let _ = file_char_cnt(&Path::new(r"C:\Windows\System32\Config\SAM")).unwrap();
     }
 
     #[test]
@@ -818,7 +841,7 @@ mod tests {
             ))
             .unwrap(),
             vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0,
                 0, 0, 0, 0, 0, 172, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 1, 2, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 6, 2, 1, 2, 2, 1, 2, 1, 6, 0, 0, 0, 3, 0, 5, 1, 0,
                 2, 5, 4, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 10, 8, 37, 94, 24, 19, 57, 54, 1,
@@ -904,12 +927,12 @@ mod tests {
             ))
             .unwrap(),
             vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 346, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 3167, 13, 0, 0, 0, 0, 0, 0, 1, 1, 5, 0, 224, 21, 172, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 20, 24, 0, 0, 0, 8, 0, 23, 20, 18, 10, 4, 11, 6, 29, 142, 0, 2,
-                4, 16, 3, 8, 4, 1, 21, 15, 41, 3, 0, 8, 0, 2, 0, 0, 0, 0, 0, 10, 0, 1136, 173, 393,
-                635, 1812, 329, 340, 945, 790, 5, 97, 586, 347, 989, 1010, 196, 8, 791, 872, 1244,
-                381, 136, 324, 14, 247, 6, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 346, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 1, 5, 0,
+                0, 13, 13, 0, 0, 3167, 13, 0, 0, 0, 0, 0, 0, 1, 1, 5, 0, 224, 21, 172, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 20, 24, 0, 0, 0, 8, 0, 23, 20, 18, 10, 4, 11, 6, 29, 142, 0,
+                2, 4, 16, 3, 8, 4, 1, 21, 15, 41, 3, 0, 8, 0, 2, 0, 0, 0, 0, 0, 10, 0, 1136, 173,
+                393, 635, 1812, 329, 340, 945, 790, 5, 97, 586, 347, 989, 1010, 196, 8, 791, 872,
+                1244, 381, 136, 324, 14, 247, 6, 0, 0, 0, 0, 0
             ]
         );
     }
@@ -939,11 +962,12 @@ mod tests {
             ))
             .unwrap(),
             vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 290, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                255, 111, 322, 72, 7, 12, 10, 28, 15, 76, 341, 128, 870, 242, 22, 59, 7, 128, 9,
+                12, 25, 8, 20, 6, 8, 21, 151, 37, 9, 4, 0, 114, 5, 39, 14, 48, 1, 10, 14, 47, 57,
+                30, 52, 31, 27, 84, 1, 46, 52, 48, 34, 5, 23, 6, 79, 7, 8, 3, 25, 25, 38, 11, 23,
+                11, 11, 23, 20, 8, 6, 16, 10, 30, 46, 28, 17, 57, 26, 39, 22, 36, 48, 4, 23, 70,
+                18, 43, 2, 35, 3, 31, 23, 6, 11, 42, 38, 22, 53, 8, 54, 39, 29, 29, 11, 41, 10, 27,
+                7, 7, 103, 6, 5, 14, 43, 23, 36, 28, 15, 10, 17, 42, 12, 17, 3, 14, 3, 74, 7, 17
             ]
         );
     }
@@ -956,11 +980,11 @@ mod tests {
             ))
             .unwrap(),
             vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 283, 8, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 38, 1, 9, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 2, 14, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+                0, 0, 9, 0, 0, 283, 8, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 38, 1, 9, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 2, 6, 0, 0, 0, 0, 0, 11, 0, 0, 3, 7, 2, 1, 2, 0, 1, 4, 2, 4, 2, 0, 4,
-                0, 1, 8, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 179, 11, 1, 49, 120, 14, 16, 2,
-                137, 46, 41, 94, 58, 129, 116, 22, 0, 80, 75, 56, 33, 41, 0, 0, 0, 4, 0, 0, 0, 0,
+                0, 1, 8, 4, 0, 4, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 179, 11, 1, 49, 120, 14, 16, 2,
+                137, 46, 41, 94, 64, 129, 116, 22, 0, 80, 75, 56, 33, 41, 0, 0, 0, 4, 0, 0, 0, 0,
                 0
             ]
         );
@@ -974,38 +998,21 @@ mod tests {
             ))
             .unwrap(),
             vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 319, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 1144, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 103, 5, 83, 0, 0, 3, 0, 0, 2,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 319, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 59, 0,
+                0, 1, 1, 0, 0, 1144, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 103, 5, 83, 0, 0, 3, 0, 0, 2,
                 0, 1, 0, 0, 0, 2, 24, 0, 0, 0, 3, 0, 66, 14, 25, 46, 24, 22, 32, 14, 79, 1, 0, 32,
                 18, 29, 27, 6, 0, 32, 15, 5, 15, 15, 13, 33, 34, 0, 2, 0, 2, 0, 0, 0, 213, 55, 91,
-                197, 162, 77, 68, 80, 190, 0, 0, 101, 50, 207, 119, 11, 0, 202, 35, 59, 61, 0, 84,
+                197, 162, 77, 68, 80, 190, 0, 0, 101, 50, 207, 119, 11, 0, 202, 35, 59, 62, 0, 88,
                 0, 129, 0, 3, 0, 3, 0, 0
             ]
         );
     }
 
     #[test]
-    fn char_cnt_utf16_file_0() {
+    fn char_cnt_utf8_file_5() {
         assert_eq!(
             file_char_cnt(&Path::new(
-                "./tests/testing_files/file_char_freq/utf16_file_0.txt"
-            ))
-            .unwrap(),
-            vec![
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 157, 161, 25, 29,
-                23, 23, 39, 7, 5, 37, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 17, 1, 1, 1, 1, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            ]
-        );
-    }
-
-    #[test]
-    fn char_cnt_utf16_file_1() {
-        assert_eq!(
-            file_char_cnt(&Path::new(
-                "./tests/testing_files/file_char_freq/utf16_file_1.txt"
+                "./tests/testing_files/file_char_freq/utf8_file_5.txt"
             ))
             .unwrap(),
             vec![
@@ -1019,10 +1026,10 @@ mod tests {
     }
 
     #[test]
-    fn char_cnt_utf16_file_2() {
+    fn char_cnt_utf8_file_6() {
         assert_eq!(
             file_char_cnt(&Path::new(
-                "./tests/testing_files/file_char_freq/utf16_file_2.txt"
+                "./tests/testing_files/file_char_freq/utf8_file_6.txt"
             ))
             .unwrap(),
             vec![
@@ -1036,10 +1043,10 @@ mod tests {
     }
 
     #[test]
-    fn char_cnt_utf16_file_3() {
+    fn char_cnt_utf8_file_7() {
         assert_eq!(
             file_char_cnt(&Path::new(
-                "./tests/testing_files/file_char_freq/utf16_file_3.txt"
+                "./tests/testing_files/file_char_freq/utf8_file_7.txt"
             ))
             .unwrap(),
             vec![
@@ -1053,18 +1060,18 @@ mod tests {
     }
 
     #[test]
-    fn char_cnt_utf16_file_4() {
+    fn char_cnt_utf8_file_8() {
         assert_eq!(
             file_char_cnt(&Path::new(
-                "./tests/testing_files/file_char_freq/utf16_file_4.txt"
+                "./tests/testing_files/file_char_freq/utf8_file_8.txt"
             ))
             .unwrap(),
             vec![
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 75, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 3, 2, 2, 2, 2,
                 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 1, 3, 0, 1, 0, 0,
-                0, 2, 2, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 1, 4, 1, 2, 1, 1,
+                1, 3, 3, 1, 2, 1, 3, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0
             ]
         );
     }
