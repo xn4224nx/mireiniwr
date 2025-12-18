@@ -3,13 +3,13 @@
  */
 
 /// Calculate the Shannon entropy of a vector of character counts.
-fn shannon_entropy_vec(decomp: &Vec<char>) -> f64 {
-    0
+fn shannon_entropy_vec(decomp: &Vec<usize>) -> f64 {
+    0.0
 }
 
 /// Calculate the Shannon entropy of a string.
 fn shannon_entropy_str(text: &String) -> f64 {
-    0
+    0.0
 }
 
 /// According to Benford's law what is the probability of finding a specific
@@ -89,15 +89,15 @@ fn prob_of_benford_digit(digit: usize, position: usize) -> f64 {
 /// For a group of numbers work out the difference between the actual frequency
 /// of each starting digit compared to its frequency predicted by Benford's
 /// law. Return the sum of the absolute differences.
-fn benford_first_digit_diff(nums: &Vec<T>) -> f64 {
-    0
+fn benford_first_digit_diff<T>(nums: &Vec<T>) -> f64 {
+    0.0
 }
 
 /// For a group of numbers work out the difference between the actual frequency
 /// of each digit in the first three positions compared to its frequency
 /// predicted by Benford's law. Return the sum of the absolute differences.
-fn benford_three_digit_diff(nums: &Vec<T>) -> f64 {
-    0
+fn benford_three_digit_diff<T>(nums: &Vec<T>) -> f64 {
+    0.0
 }
 
 #[cfg(test)]
@@ -106,27 +106,27 @@ mod tests {
 
     #[test]
     fn benford_first_digit_diff_exp00() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0)
+        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
     }
 
     #[test]
     fn benford_first_digit_diff_exp01() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0)
+        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
     }
 
     #[test]
     fn benford_first_digit_diff_exp02() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0)
+        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
     }
 
     #[test]
     fn benford_first_digit_diff_exp03() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0)
+        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
     }
 
     #[test]
     fn benford_first_digit_diff_exp04() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0)
+        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
     }
 
     #[test]
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn shannon_entropy_vec_exp00() {
-        assert_eq!(shannon_entropy_vec(&vec![1]), 0);
+        assert_eq!(shannon_entropy_vec(&vec![1]), 0.0);
     }
 
     #[test]
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn shannon_entropy_vec_exp03() {
-        assert_eq!(shannon_entropy_vec(&vec![0]), 0);
+        assert_eq!(shannon_entropy_vec(&vec![0]), 0.0);
     }
 
     #[test]
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn shannon_entropy_vec_empty() {
-        assert_eq!(shannon_entropy_vec(&Vec::new()), 0);
+        assert_eq!(shannon_entropy_vec(&Vec::new()), 0.0);
     }
 
     #[test]
@@ -236,6 +236,6 @@ mod tests {
 
     #[test]
     fn shannon_entropy_str_empty() {
-        assert_eq!(shannon_entropy_str(&String::from("")), 0);
+        assert_eq!(shannon_entropy_str(&String::from("")), 0.0);
     }
 }
