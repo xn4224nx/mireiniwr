@@ -105,8 +105,28 @@ fn prob_of_benford_digit(digit: usize, position: usize) -> f64 {
 /// For a group of numbers work out the difference between the actual frequency
 /// of each starting digit compared to its frequency predicted by Benford's
 /// law. Return the sum of the absolute differences.
-fn benford_first_digit_diff<T>(nums: &Vec<T>) -> f64 {
-    0.0
+fn benford_first_digit_diff<T: ToString>(nums: &Vec<T>) -> f64 {
+    let mut digit_count = vec![10; 0];
+
+    /* Read every number and convert it to a string, then extract digits. */
+    for num in nums.iter() {
+        let digits: Vec<usize> = num
+            .to_string()
+            .chars()
+            .map(|x| x.to_digit(10).unwrap() as usize)
+            .collect();
+        digit_count[digits[0]] += 1;
+    }
+
+    return digit_count
+        .into_iter()
+        .enumerate()
+        .map(|(idx, x)| {
+            (((x as f64) / (nums.len() as f64)) * ((x as f64) / (nums.len() as f64)).log2()
+                - prob_of_benford_digit(idx, 0))
+            .abs()
+        })
+        .sum::<f64>();
 }
 
 /// For a group of numbers work out the difference between the actual frequency
