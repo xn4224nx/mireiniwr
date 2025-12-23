@@ -102,37 +102,17 @@ fn prob_of_benford_digit(digit: usize, position: usize) -> f64 {
     };
 }
 
-/// For a group of numbers work out the difference between the actual frequency
-/// of each starting digit compared to its frequency predicted by Benford's
-/// law. Return the sum of the absolute differences.
-fn benford_first_digit_diff<T: ToString>(nums: &Vec<T>) -> f64 {
-    let mut digit_count = vec![10; 0];
-
-    /* Read every number and convert it to a string, then extract digits. */
-    for num in nums.iter() {
-        let digits: Vec<usize> = num
-            .to_string()
-            .chars()
-            .map(|x| x.to_digit(10).unwrap() as usize)
-            .collect();
-        digit_count[digits[0]] += 1;
-    }
-
-    return digit_count
-        .into_iter()
-        .enumerate()
-        .map(|(idx, x)| {
-            (((x as f64) / (nums.len() as f64)) * ((x as f64) / (nums.len() as f64)).log2()
-                - prob_of_benford_digit(idx, 0))
-            .abs()
-        })
-        .sum::<f64>();
+/// For a group of numbers determine the probability of encountering a specific
+/// digit as the Nth digit in a number. Return an array of ten probabilities of
+/// encountering each digit. Ignore the first digit in the number if it is a
+/// zero.
+fn digit_freq_at_idx<T: ToString>(nums: &Vec<T>, index: usize) -> Vec<f64> {
+    Vec::new()
 }
 
-/// For a group of numbers work out the difference between the actual frequency
-/// of each digit in the first three positions compared to its frequency
-/// predicted by Benford's law. Return the sum of the absolute differences.
-fn benford_three_digit_diff<T>(nums: &Vec<T>) -> f64 {
+/// Calculate the absolute difference between an array of probabilities and the
+/// Benford frequency of encountering that digit.
+fn benford_diff(num_freq: &Vec<f64>, index: usize) -> f64 {
     0.0
 }
 
@@ -141,28 +121,475 @@ mod tests {
     use super::*;
 
     #[test]
-    fn benford_first_digit_diff_exp00() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
+    fn digit_freq_at_idx_exp00() {
+        assert_eq!(
+            digit_freq_at_idx(&vec![420, 463, 981, 19, 578, 265, 39, 876, 539, 941], 0),
+            vec![0.0, 0.1, 0.1, 0.1, 0.2, 0.2, 0.0, 0.0, 0.1, 0.2]
+        )
     }
 
     #[test]
-    fn benford_first_digit_diff_exp01() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
+    fn digit_freq_at_idx_exp01() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![950, -577, 261, -273, 727, -437, 781, -847, 668, -859],
+                0
+            ),
+            vec![0.0, 0.0, 0.2, 0.0, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1]
+        )
     }
 
     #[test]
-    fn benford_first_digit_diff_exp02() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
+    fn digit_freq_at_idx_exp02() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    0.468, 0.075, 0.850, 0.202, 0.803, 0.419, 0.473, 0.489, 0.517, 0.479
+                ],
+                0
+            ),
+            vec![0.0, 0.0, 0.1, 0.0, 0.5, 0.1, 0.0, 0.1, 0.2, 0.0]
+        )
     }
 
     #[test]
-    fn benford_first_digit_diff_exp03() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
+    fn digit_freq_at_idx_exp03() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    0.913, -0.473, 0.025, -0.072, 0.554, -0.072, 0.999, -0.219, 0.281, -0.302
+                ],
+                0
+            ),
+            vec![0.0, 0.0, 0.3, 0.1, 0.1, 0.1, 0.0, 0.2, 0.0, 0.2]
+        )
     }
 
     #[test]
-    fn benford_first_digit_diff_exp04() {
-        assert_eq!(benford_first_digit_diff(&vec![0]), 0.0)
+    fn digit_freq_at_idx_exp04() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    -712354.191,
+                    485151.655,
+                    -376247.543,
+                    335660.330,
+                    -530630.925,
+                    795.310,
+                    -125823.597,
+                    129188.400,
+                    -41044.353,
+                ],
+                0
+            ),
+            vec![
+                0.0,
+                0.2222222222222222,
+                0.0,
+                0.2222222222222222,
+                0.2222222222222222,
+                0.1111111111111111,
+                0.0,
+                0.2222222222222222,
+                0.0,
+                0.0
+            ]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp05() {
+        assert_eq!(
+            digit_freq_at_idx(&vec![420, 463, 981, 19, 578, 265, 39, 876, 539, 941], 1),
+            vec![0.0, 0.0, 0.1, 0.1, 0.1, 0.0, 0.2, 0.2, 0.1, 0.2]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp06() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![950, -577, 261, -273, 727, -437, 781, -847, 668, -859],
+                1
+            ),
+            vec![0.0, 0.0, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.0]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp07() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    0.468, 0.075, 0.850, 0.202, 0.803, 0.419, 0.473, 0.489, 0.517, 0.479
+                ],
+                1
+            ),
+            vec![0.2, 0.2, 0.0, 0.0, 0.0, 0.2, 0.1, 0.2, 0.1, 0.0]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp08() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    0.913, -0.473, 0.025, -0.072, 0.554, -0.072, 0.999, -0.219, 0.281, -0.302
+                ],
+                1
+            ),
+            vec![0.1, 0.2, 0.2, 0.0, 0.0, 0.2, 0.0, 0.1, 0.1, 0.1]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp09() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    -712354.191,
+                    485151.655,
+                    -376247.543,
+                    335660.330,
+                    -530630.925,
+                    795.310,
+                    -125823.597,
+                    129188.400,
+                    -41044.353,
+                ],
+                1
+            ),
+            vec![
+                0.0,
+                0.2222222222222222,
+                0.0,
+                0.2222222222222222,
+                0.2222222222222222,
+                0.1111111111111111,
+                0.0,
+                0.2222222222222222,
+                0.0,
+                0.0
+            ]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp10() {
+        assert_eq!(
+            digit_freq_at_idx(&vec![420, 463, 981, 19, 578, 265, 39, 876, 539, 941], 2),
+            vec![
+                0.125, 0.25, 0.0, 0.125, 0.0, 0.125, 0.125, 0.0, 0.125, 0.125
+            ]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp11() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![950, -577, 261, -273, 727, -437, 781, -847, 668, -859],
+                2
+            ),
+            vec![0.1, 0.2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.4, 0.1, 0.1]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp12() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    0.468, 0.075, 0.850, 0.202, 0.803, 0.419, 0.473, 0.489, 0.517, 0.479
+                ],
+                2
+            ),
+            vec![0.0, 0.0, 0.125, 0.25, 0.0, 0.0, 0.0, 0.125, 0.125, 0.375]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp13() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    0.913, -0.473, 0.025, -0.072, 0.554, -0.072, 0.999, -0.219, 0.281, -0.302
+                ],
+                2
+            ),
+            vec![
+                0.0,
+                0.14285714285714285,
+                0.14285714285714285,
+                0.2857142857142857,
+                0.14285714285714285,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.2857142857142857
+            ]
+        )
+    }
+
+    #[test]
+    fn digit_freq_at_idx_exp14() {
+        assert_eq!(
+            digit_freq_at_idx(
+                &vec![
+                    -712354.191,
+                    485151.655,
+                    -376247.543,
+                    335660.330,
+                    -530630.925,
+                    795.310,
+                    -125823.597,
+                    129188.400,
+                    -41044.353,
+                ],
+                2
+            ),
+            vec![
+                0.2222222222222222,
+                0.0,
+                0.1111111111111111,
+                0.0,
+                0.0,
+                0.4444444444444444,
+                0.1111111111111111,
+                0.0,
+                0.0,
+                0.1111111111111111
+            ]
+        )
+    }
+
+    #[test]
+    fn benford_diff_exp00() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.125, 0.25, 0.0, 0.125, 0.0, 0.125, 0.125, 0.0, 0.125, 0.125
+                ],
+                0
+            ),
+            0.8539974558725246
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp01() {
+        assert_eq!(
+            benford_diff(&vec![0.1, 0.2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.4, 0.1, 0.1], 0),
+            0.8519374645445623
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp02() {
+        assert_eq!(
+            benford_diff(
+                &vec![0.0, 0.0, 0.125, 0.25, 0.0, 0.0, 0.0, 0.125, 0.125, 0.375],
+                0
+            ),
+            1.2295285430385015
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp03() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.0,
+                    0.14285714285714285,
+                    0.14285714285714285,
+                    0.2857142857142857,
+                    0.14285714285714285,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.2857142857142857
+                ],
+                0
+            ),
+            0.8881360887005513
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp04() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.2222222222222222,
+                    0.0,
+                    0.1111111111111111,
+                    0.0,
+                    0.0,
+                    0.4444444444444444,
+                    0.1111111111111111,
+                    0.0,
+                    0.0,
+                    0.1111111111111111
+                ],
+                0
+            ),
+            0.8375116702722197
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp05() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.125, 0.25, 0.0, 0.125, 0.0, 0.125, 0.125, 0.0, 0.125, 0.125
+                ],
+                1
+            ),
+            0.6874117386216135
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp06() {
+        assert_eq!(
+            benford_diff(&vec![0.1, 0.2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.4, 0.1, 0.1], 1),
+            0.6640519711323531
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp07() {
+        assert_eq!(
+            benford_diff(
+                &vec![0.0, 0.0, 0.125, 0.25, 0.0, 0.0, 0.0, 0.125, 0.125, 0.375],
+                1
+            ),
+            0.7969132271234789
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp08() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.0,
+                    0.14285714285714285,
+                    0.14285714285714285,
+                    0.2857142857142857,
+                    0.14285714285714285,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.2857142857142857
+                ],
+                1
+            ),
+            0.6353835337569117
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp09() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.2222222222222222,
+                    0.0,
+                    0.1111111111111111,
+                    0.0,
+                    0.0,
+                    0.4444444444444444,
+                    0.1111111111111111,
+                    0.0,
+                    0.0,
+                    0.1111111111111111
+                ],
+                1
+            ),
+            0.8200788848996377
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp10() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.125, 0.25, 0.0, 0.125, 0.0, 0.125, 0.125, 0.0, 0.125, 0.125
+                ],
+                2
+            ),
+            0.6003389846537713
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp11() {
+        assert_eq!(
+            benford_diff(&vec![0.1, 0.2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.4, 0.1, 0.1], 2),
+            0.8053929363145436
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp12() {
+        assert_eq!(
+            benford_diff(
+                &vec![0.0, 0.0, 0.125, 0.25, 0.0, 0.0, 0.0, 0.125, 0.125, 0.375],
+                2
+            ),
+            1.0050546307142103
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp13() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.0,
+                    0.14285714285714285,
+                    0.14285714285714285,
+                    0.2857142857142857,
+                    0.14285714285714285,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.2857142857142857
+                ],
+                2
+            ),
+            0.997267281996059
+        );
+    }
+
+    #[test]
+    fn benford_diff_exp14() {
+        assert_eq!(
+            benford_diff(
+                &vec![
+                    0.2222222222222222,
+                    0.0,
+                    0.1111111111111111,
+                    0.0,
+                    0.0,
+                    0.4444444444444444,
+                    0.1111111111111111,
+                    0.0,
+                    0.0,
+                    0.1111111111111111
+                ],
+                2
+            ),
+            0.9995747758066974
+        );
     }
 
     #[test]
